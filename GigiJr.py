@@ -4,6 +4,9 @@ import openai
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
 
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+
 
 # OpenAI API key (Set in Streamlit UI)
 OPENAI_API_KEY = ""
@@ -32,10 +35,29 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 
-# Function to run Local Model
+# Function to run Local Model with Offloading
 def local_response(prompt):
-    response = ollama.chat(model=model_choice, messages=[{"role": "user", "content": prompt}])
-    return response["message"]["content"]
+    if model_choice == "deepseek-14b":
+        model_name = "deepseek-ai/deepseek-14b"
+
+        # Load model with offloading to RAM
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            device_map="auto",  # Automatically offloads layers to CPU when VRAM is full
+            offload_folder="offload",  # Saves excess layers in RAM
+            torch_dtype=torch.float16  # Maintains high precision
+        )
+
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+        inputs = tokenizer(prompt, return_tensors="pt").to("cuda")  # Send input to GPU
+        outputs = model.generate(**inputs, max_new_tokens=200)
+        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        return response
+
+    else:
+        response = ollama.chat(model=model_choice, messages=[{"role": "user", "content": prompt}])
+        return response["message"]["content"]
 
 
 # Function to choose best model
