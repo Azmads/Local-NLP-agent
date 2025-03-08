@@ -1,5 +1,8 @@
 # Local-NLP-agent
 Building a local model using different LLMs, by implementing an easy to use GUI
+Local NLP agent Working APP of an all in one LLM browser capable of using Deepseek, 
+llama, mistral or other LLMs LOCALLY or even Chatgpts API with tokens and can also read files/documentation for the user - 
+useable but currently in alpha build
 
 - Had to make sure all libraries were downloaded into Pycharm - langchain; openai; ollama; streamlit
 - Had to download the ollama from ollama.com 
